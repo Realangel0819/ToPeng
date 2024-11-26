@@ -92,6 +92,10 @@ dependencies {
     // Location Services
     implementation("com.google.android.gms:play-services-location:21.0.1")
 
+    //for weather icon load
+    implementation("com.github.bumptech.glide:glide:4.15.1")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.15.1")
+
     // Jetpack Libraries
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

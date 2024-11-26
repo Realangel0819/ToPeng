@@ -19,7 +19,8 @@ data class Main(
 
 data class Weather(
     val main: String,         // 날씨 상태
-    val description: String   // 상태 설명
+    val description: String,  // 상태 설명
+    val icon: String          // 날씨 아이콘 (예: "01d", "02n")
 )
 
 data class City(
