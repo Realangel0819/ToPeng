@@ -4,13 +4,36 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="8dp">
+    android:padding="16dp"
+    android:clickable="true"
+    android:focusable="true">
 
-    <!-- 할 일 체크박스 -->
+    <!-- 체크박스 -->
     <CheckBox
         android:id="@+id/todoCheckBox"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="할 일 제목" />
+        android:layout_height="wrap_content" />
 
+    <!-- 할 일 텍스트 표시용 TextView -->
+    <TextView
+        android:id="@+id/todoTextView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="할 일을 입력하세요"
+        android:textSize="16sp"
+        android:paddingStart="16dp" />
+
+    <!-- 할 일 수정용 EditText (초기에는 숨김) -->
+    <EditText
+        android:id="@+id/todoEditText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:hint="수정하세요"
+        android:textSize="16sp"
+        android:visibility="gone"
+        android:inputType="textNoSuggestions|textMultiLine"
+        android:maxLines="1"
+        android:paddingStart="16dp"/>
 </LinearLayout>
