@@ -1,18 +1,16 @@
 package com.example.topeng
 
+import MyDatabaseHelper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.EditorInfo
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.TextView
-import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 
-
 class ToDoAdapter(
-    private val todoList: MutableList<String>,
+    private val todoList: MutableList<Triple<String, String, Boolean>>, // ID, 텍스트, 체크 상태
     private val onItemLongClick: (Int) -> Unit, // 길게 클릭 시 삭제 처리
     private val onItemClick: (Int) -> Unit // 한 번 클릭 시 수정 처리
 ) : RecyclerView.Adapter<ToDoAdapter.ToDoViewHolder>() {
@@ -24,18 +22,33 @@ class ToDoAdapter(
     }
 
     override fun onBindViewHolder(holder: ToDoViewHolder, position: Int) {
-        val todo = todoList[position]
-        holder.todoTextView.text = todo // 초기 텍스트 설정
-        holder.todoCheckBox.isChecked = false // 체크박스 상태 초기화
+        val (id, text, isChecked) = todoList[position]
 
-        // 한 번 클릭 시 수정 처리
-        holder.itemView.setOnClickListener {
-            onItemClick(position) // 수정 처리
+        // 텍스트 설정
+        holder.todoTextView.text = text
+
+        // 체크박스 상태 설정
+        holder.todoCheckBox.setOnCheckedChangeListener(null) // 리스너 제거
+        holder.todoCheckBox.isChecked = isChecked
+
+        // 체크박스 상태 변경 리스너
+        holder.todoCheckBox.setOnCheckedChangeListener { _, isChecked ->
+            // 리스트 업데이트
+            todoList[position] = Triple(id, text, isChecked)
+
+            // 데이터베이스 업데이트
+            val dbHelper = MyDatabaseHelper(holder.itemView.context)
+            dbHelper.insertOrUpdateText(id, text, isChecked)
         }
 
-        // 아이템 길게 클릭 시 삭제 여부 알림
+        // 아이템 클릭 처리 (수정 모드 활성화)
+        holder.itemView.setOnClickListener {
+            onItemClick(position)
+        }
+
+        // 아이템 길게 클릭 처리 (삭제 확인)
         holder.itemView.setOnLongClickListener {
-            onItemLongClick(position) // 삭제 처리
+            onItemLongClick(position)
             true
         }
     }
@@ -43,8 +56,8 @@ class ToDoAdapter(
     override fun getItemCount(): Int = todoList.size
 
     class ToDoViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val todoCheckBox: CheckBox = view.findViewById(R.id.todoCheckBox)
-        val todoTextView: TextView = view.findViewById(R.id.todoTextView)
-        val todoEditText: EditText = view.findViewById(R.id.todoEditText) // EditText 추가
+        val todoCheckBox: CheckBox = view.findViewById(R.id.todoCheckBox) // 체크박스 ID
+        val todoTextView: TextView = view.findViewById(R.id.todoTextView) // 텍스트뷰 ID
+        val todoEditText: EditText = view.findViewById(R.id.todoEditText) // 수정용 EditText
     }
 }

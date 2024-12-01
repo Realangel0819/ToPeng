@@ -1,5 +1,6 @@
 package com.example.topeng
 
+import MyDatabaseHelper
 import android.app.AlertDialog
 import android.content.Context
 import android.os.Bundle
@@ -10,9 +11,6 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -21,7 +19,7 @@ class ToDoFragment : Fragment() {
 
     private lateinit var todoRecyclerView: RecyclerView
     private lateinit var addTodoButton: Button
-    private val todoList = mutableListOf<String>() // To-Do 리스트 데이터
+    private val todoList = mutableListOf<Triple<String, String, Boolean>>() // ID, 텍스트, 체크 상태
     private lateinit var adapter: ToDoAdapter
 
     override fun onCreateView(
@@ -39,11 +37,14 @@ class ToDoFragment : Fragment() {
         todoRecyclerView = view.findViewById(R.id.todoRecyclerView)
         addTodoButton = view.findViewById(R.id.addTodoButton)
 
+        // SQLite에서 데이터 불러오기
+        loadDataFromDatabase()
+
         // RecyclerView 어댑터 설정
-        adapter = ToDoAdapter(todoList, { position -> // 길게 클릭 시 삭제 처리
-            showDeleteConfirmationDialog(position)
-        }, { position -> // 한 번 클릭 시 수정 처리
-            enableEditMode(position)
+        adapter = ToDoAdapter(todoList, { position ->
+            showDeleteConfirmationDialog(position) // 삭제 처리
+        }, { position ->
+            enableEditMode(position) // 수정 처리
         })
         todoRecyclerView.adapter = adapter
         todoRecyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -54,13 +55,26 @@ class ToDoFragment : Fragment() {
         }
     }
 
+    // SQLite에서 데이터 불러오기
+    private fun loadDataFromDatabase() {
+        val dbHelper = MyDatabaseHelper(requireContext())
+        val savedData = dbHelper.getAllTexts()
+
+        // SQLite에서 불러온 데이터를 todoList에 추가
+        todoList.clear()
+        todoList.addAll(savedData) // Triple<ID, TEXT, isChecked> 추가
+    }
+
     private fun addNewTodo() {
         val newTodo = "" // 빈 문자열로 새로운 할 일 추가
-        todoList.add(newTodo) // 데이터 추가
-        val position = todoList.size - 1
-        adapter.notifyItemInserted(position) // RecyclerView 갱신
+        val position = todoList.size
+        val uniqueId = MyDatabaseHelper(requireContext()).generateUniqueId(position)
 
-        // 새로운 아이템이 화면에 보이도록 스크롤
+        todoList.add(Triple(uniqueId, newTodo, false)) // ID, 텍스트, 초기 체크 상태
+        val dbHelper = MyDatabaseHelper(requireContext())
+        dbHelper.insertOrUpdateText(uniqueId, newTodo, false) // 데이터베이스에 저장
+
+        adapter.notifyItemInserted(position) // RecyclerView 갱신
         todoRecyclerView.scrollToPosition(position)
 
         // 추가된 아이템을 즉시 편집 모드로 전환
@@ -70,9 +84,8 @@ class ToDoFragment : Fragment() {
     }
 
     private fun enableEditMode(position: Int) {
-        // 기존 코드
         val holder = todoRecyclerView.findViewHolderForAdapterPosition(position) as? ToDoAdapter.ToDoViewHolder
-        val currentTodo = todoList[position]
+        val (id, currentTodo, isChecked) = todoList[position]
 
         // 뷰 홀더가 null인지 확인
         if (holder != null) {
@@ -95,35 +108,42 @@ class ToDoFragment : Fragment() {
             holder.todoEditText.setOnEditorActionListener { v, actionId, event ->
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
                     val updatedText = v.text.toString().trim()
+
                     if (updatedText.isNotEmpty()) {
-                        todoList[position] = updatedText // 수정된 텍스트로 업데이트
-                        adapter.notifyItemChanged(position) // RecyclerView 갱신
+                        todoList[position] = Triple(id, updatedText, isChecked)
+                        adapter.notifyItemChanged(position)
+
+                        // 데이터베이스 업데이트
+                        val dbHelper = MyDatabaseHelper(holder.itemView.context)
+                        dbHelper.insertOrUpdateText(id, updatedText, isChecked)
                     } else {
-                        // 텍스트가 비어있다면 아이템 삭제
                         todoList.removeAt(position)
                         adapter.notifyItemRemoved(position)
+
+                        // 데이터베이스에서 삭제
+                        val dbHelper = MyDatabaseHelper(holder.itemView.context)
+                        dbHelper.deleteTextById(id)
                     }
 
-                    // EditText를 숨기고 TextView로 되돌림
                     holder.todoEditText.visibility = View.GONE
                     holder.todoTextView.visibility = View.VISIBLE
-
-                    // 키보드 숨기기
                     hideKeyboard(v)
                     true
                 } else {
                     false
                 }
             }
-        } else {
-            // 뷰 홀더를 찾지 못한 경우 (예: 아이템이 화면에 보이지 않는 경우)
-            todoRecyclerView.scrollToPosition(position)
-            todoRecyclerView.post {
-                enableEditMode(position)
+            // EditText의 포커스 변경 처리
+            holder.todoEditText.setOnFocusChangeListener { v, hasFocus ->
+                if (!hasFocus) {
+                    // 포커스가 사라지면 기존 상태로 복원
+                    holder.todoEditText.visibility = View.GONE
+                    holder.todoTextView.visibility = View.VISIBLE
+                    hideKeyboard(v)
+                }
             }
         }
     }
-
 
     // 키보드를 숨기는 함수
     private fun hideKeyboard(view: View) {
@@ -132,11 +152,15 @@ class ToDoFragment : Fragment() {
     }
 
     private fun showDeleteConfirmationDialog(position: Int) {
+        val (id, _, _) = todoList[position]
         val builder = AlertDialog.Builder(requireContext())
         builder.setMessage("이 할 일을 삭제하시겠습니까?")
             .setPositiveButton("삭제") { _, _ ->
-                todoList.removeAt(position) // 리스트에서 삭제
-                adapter.notifyItemRemoved(position) // RecyclerView 갱신
+                todoList.removeAt(position)
+                adapter.notifyItemRemoved(position)
+
+                val dbHelper = MyDatabaseHelper(requireContext())
+                dbHelper.deleteTextById(id) // 데이터베이스에서 삭제
             }
             .setNegativeButton("취소", null)
         builder.create().show()

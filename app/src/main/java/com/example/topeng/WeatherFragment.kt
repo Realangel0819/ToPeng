@@ -20,6 +20,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 class WeatherFragment : Fragment() {
 
@@ -27,6 +30,7 @@ class WeatherFragment : Fragment() {
     private lateinit var weatherIconImageView: ImageView // 아이콘 이미지를 위한 ImageView
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private val apiKey = BuildConfig.OPENWEATHERMAP_API_KEY // API 키 가져오기
+    private lateinit var dateTextView: TextView // 날짜를 표시할 TextView
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -38,9 +42,20 @@ class WeatherFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        dateTextView = view.findViewById(R.id.dateTextView) // dateTextView 초기화
         weatherTextView = view.findViewById(R.id.weatherTextView)
         weatherIconImageView = view.findViewById(R.id.weatherIconImageView) // 아이콘 뷰 초기화
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
+        // 오늘 날짜 설정
+        val today = Calendar.getInstance().time
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val todayDate = dateFormat.format(today)
+        dateTextView.text = todayDate
+
+
+        // 기존 weatherTextView, weatherIconImageView 초기화 등
+        weatherTextView = view.findViewById(R.id.weatherTextView)
+        weatherIconImageView = view.findViewById(R.id.weatherIconImageView)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
 
         // 권한 확인 후 위치 가져오기
