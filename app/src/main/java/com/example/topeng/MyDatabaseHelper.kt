@@ -9,7 +9,10 @@ class MyDatabaseHelper(context: Context) {
 
     // 페이징된 할 일 목록 가져오기
     fun getPagedToDoItems(offset: Int, limit: Int): List<ToDoItem> {
-        val cursor = db.rawQuery("SELECT * FROM todo_items LIMIT ? OFFSET ?", arrayOf(limit.toString(), offset.toString()))
+        val cursor = db.rawQuery(
+            "SELECT * FROM todo_items ORDER BY id ASC LIMIT ? OFFSET ?",
+            arrayOf(limit.toString(), offset.toString())
+        )
         val todoItems = mutableListOf<ToDoItem>()
         while (cursor.moveToNext()) {
             val id = cursor.getString(cursor.getColumnIndex("id"))
@@ -20,6 +23,7 @@ class MyDatabaseHelper(context: Context) {
         cursor.close()
         return todoItems
     }
+
 
     // 할 일 항목 저장 또는 업데이트
     fun insertOrUpdateToDoItem(todoItem: ToDoItem) {

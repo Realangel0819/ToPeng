@@ -10,7 +10,6 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-
 class ToDoAdapter(
     private val todoList: MutableList<ToDoItem>,
     private val onEditClick: (Int) -> Unit,
@@ -25,6 +24,14 @@ class ToDoAdapter(
     override fun onBindViewHolder(holder: ToDoViewHolder, position: Int) {
         val todoItem = todoList[position]
         holder.bind(todoItem)
+
+        // 체크박스 상태 변경 시
+        holder.todoCheckBox.setOnCheckedChangeListener { _, isChecked ->
+            todoItem.isChecked = isChecked
+            // 데이터베이스에서 체크 상태 업데이트
+            val dbHelper = MyDatabaseHelper(holder.itemView.context)
+            dbHelper.insertOrUpdateToDoItem(todoItem)
+        }
 
         // 짧은 클릭: 수정 모드로 진입
         holder.itemView.setOnClickListener {
@@ -44,10 +51,12 @@ class ToDoAdapter(
 
     class ToDoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val todoTextView: TextView = itemView.findViewById(R.id.todoTextView)
+        val todoCheckBox: CheckBox = itemView.findViewById(R.id.todoCheckBox)
         val todoEditText: EditText = itemView.findViewById(R.id.todoEditText)
 
         fun bind(todoItem: ToDoItem) {
             todoTextView.text = todoItem.text
+            todoCheckBox.isChecked = todoItem.isChecked  // 체크박스 상태 반영
             todoEditText.setText(todoItem.text)
         }
     }
