@@ -14,13 +14,16 @@ import android.widget.Button
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-
 class ToDoFragment : Fragment() {
 
     private lateinit var todoRecyclerView: RecyclerView
     private lateinit var addTodoButton: Button
     private val todoList = mutableListOf<Triple<String, String, Boolean>>() // ID, 텍스트, 체크 상태
     private lateinit var adapter: ToDoAdapter
+
+    private var offset = 0 // 페이징 시작점
+    private val limit = 20 // 한 번에 로드할 데이터 수
+    private var isLoading = false // 데이터를 불러오는 중인지 확인
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -37,9 +40,6 @@ class ToDoFragment : Fragment() {
         todoRecyclerView = view.findViewById(R.id.todoRecyclerView)
         addTodoButton = view.findViewById(R.id.addTodoButton)
 
-        // SQLite에서 데이터 불러오기
-        loadDataFromDatabase()
-
         // RecyclerView 어댑터 설정
         adapter = ToDoAdapter(todoList, { position ->
             showDeleteConfirmationDialog(position) // 삭제 처리
@@ -49,6 +49,24 @@ class ToDoFragment : Fragment() {
         todoRecyclerView.adapter = adapter
         todoRecyclerView.layoutManager = LinearLayoutManager(requireContext())
 
+        // 스크롤 이벤트 처리
+        todoRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                val totalItemCount = layoutManager.itemCount
+                val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
+
+                if (!isLoading && lastVisibleItem >= totalItemCount - 1) {
+                    // 추가 데이터 로드
+                    loadVisibleData()
+                }
+            }
+        })
+
+        // 초기 데이터 로드
+        loadVisibleData()
+
         // 할 일 추가 버튼 클릭 이벤트
         addTodoButton.setOnClickListener {
             addNewTodo()
@@ -56,13 +74,21 @@ class ToDoFragment : Fragment() {
     }
 
     // SQLite에서 데이터 불러오기
-    private fun loadDataFromDatabase() {
-        val dbHelper = MyDatabaseHelper(requireContext())
-        val savedData = dbHelper.getAllTexts()
+    private fun loadVisibleData() {
+        if (isLoading) return
+        isLoading = true
 
-        // SQLite에서 불러온 데이터를 todoList에 추가
-        todoList.clear()
-        todoList.addAll(savedData) // Triple<ID, TEXT, isChecked> 추가
+        val dbHelper = MyDatabaseHelper(requireContext())
+        val visibleData = dbHelper.getPagedTexts(offset, limit)
+
+        if (visibleData.isNotEmpty()) {
+            val startPosition = todoList.size
+            todoList.addAll(visibleData)
+            adapter.notifyItemRangeInserted(startPosition, visibleData.size)
+            offset += limit
+        }
+
+        isLoading = false
     }
 
     private fun addNewTodo() {
@@ -87,40 +113,30 @@ class ToDoFragment : Fragment() {
         val holder = todoRecyclerView.findViewHolderForAdapterPosition(position) as? ToDoAdapter.ToDoViewHolder
         val (id, currentTodo, isChecked) = todoList[position]
 
-        // 뷰 홀더가 null인지 확인
         if (holder != null) {
-            // TextView를 숨기고 EditText를 보이게 함
             holder.todoTextView.visibility = View.GONE
             holder.todoEditText.visibility = View.VISIBLE
             holder.todoEditText.setText(currentTodo)
-
-            // EditText 속성 설정
             holder.todoEditText.isSingleLine = true
             holder.todoEditText.imeOptions = EditorInfo.IME_ACTION_DONE
             holder.todoEditText.inputType = InputType.TYPE_CLASS_TEXT
-
-            // 포커스를 주고 키보드를 보이게 함
             holder.todoEditText.requestFocus()
+
             val imm = activity?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             imm.showSoftInput(holder.todoEditText, InputMethodManager.SHOW_IMPLICIT)
 
-            // Enter 키 눌렀을 때 처리
-            holder.todoEditText.setOnEditorActionListener { v, actionId, event ->
+            holder.todoEditText.setOnEditorActionListener { v, actionId, _ ->
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
                     val updatedText = v.text.toString().trim()
 
                     if (updatedText.isNotEmpty()) {
                         todoList[position] = Triple(id, updatedText, isChecked)
                         adapter.notifyItemChanged(position)
-
-                        // 데이터베이스 업데이트
                         val dbHelper = MyDatabaseHelper(holder.itemView.context)
                         dbHelper.insertOrUpdateText(id, updatedText, isChecked)
                     } else {
                         todoList.removeAt(position)
                         adapter.notifyItemRemoved(position)
-
-                        // 데이터베이스에서 삭제
                         val dbHelper = MyDatabaseHelper(holder.itemView.context)
                         dbHelper.deleteTextById(id)
                     }
@@ -133,10 +149,8 @@ class ToDoFragment : Fragment() {
                     false
                 }
             }
-            // EditText의 포커스 변경 처리
             holder.todoEditText.setOnFocusChangeListener { v, hasFocus ->
                 if (!hasFocus) {
-                    // 포커스가 사라지면 기존 상태로 복원
                     holder.todoEditText.visibility = View.GONE
                     holder.todoTextView.visibility = View.VISIBLE
                     hideKeyboard(v)
@@ -145,7 +159,6 @@ class ToDoFragment : Fragment() {
         }
     }
 
-    // 키보드를 숨기는 함수
     private fun hideKeyboard(view: View) {
         val imm = activity?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(view.windowToken, 0)
@@ -158,9 +171,8 @@ class ToDoFragment : Fragment() {
             .setPositiveButton("삭제") { _, _ ->
                 todoList.removeAt(position)
                 adapter.notifyItemRemoved(position)
-
                 val dbHelper = MyDatabaseHelper(requireContext())
-                dbHelper.deleteTextById(id) // 데이터베이스에서 삭제
+                dbHelper.deleteTextById(id)
             }
             .setNegativeButton("취소", null)
         builder.create().show()

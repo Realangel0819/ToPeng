@@ -48,7 +48,30 @@ class MyDatabaseHelper(context: Context) :
     fun getAllTexts(): List<Triple<String, String, Boolean>> {
         val texts = mutableListOf<Triple<String, String, Boolean>>()
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT * FROM $TABLE_NAME", null)
+
+        // ID 순서로 정렬
+        val cursor = db.rawQuery("SELECT * FROM $TABLE_NAME ORDER BY $COLUMN_ID ASC", null)
+
+        if (cursor.moveToFirst()) {
+            do {
+                val id = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ID))
+                val text = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TEXT))
+                val isChecked = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_IS_CHECKED)) == 1
+                texts.add(Triple(id, text, isChecked))
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        db.close()
+        return texts
+    }
+
+    fun getPagedTexts(offset: Int, limit: Int): List<Triple<String, String, Boolean>> {
+        val texts = mutableListOf<Triple<String, String, Boolean>>()
+        val db = readableDatabase
+
+        // 페이징 및 정렬 추가
+        val query = "SELECT * FROM $TABLE_NAME ORDER BY $COLUMN_ID ASC LIMIT ? OFFSET ?"
+        val cursor = db.rawQuery(query, arrayOf(limit.toString(), offset.toString()))
 
         if (cursor.moveToFirst()) {
             do {
