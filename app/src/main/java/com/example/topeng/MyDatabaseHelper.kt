@@ -1,100 +1,43 @@
 import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
-import android.database.sqlite.SQLiteOpenHelper
-import java.text.SimpleDateFormat
-import java.util.*
+import com.example.topeng.ToDoItem
 
-class MyDatabaseHelper(context: Context) :
-    SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+class MyDatabaseHelper(context: Context) {
 
-    companion object {
-        private const val DATABASE_NAME = "AppDatabase.db"
-        private const val DATABASE_VERSION = 2 // 데이터베이스 버전 증가
-        const val TABLE_NAME = "MyData"
-        const val COLUMN_ID = "id"
-        const val COLUMN_TEXT = "text"
-        const val COLUMN_IS_CHECKED = "isChecked" // 체크 상태
-    }
+    private val db: SQLiteDatabase = context.openOrCreateDatabase("todo_db", Context.MODE_PRIVATE, null)
 
-    override fun onCreate(db: SQLiteDatabase?) {
-        val createTableQuery = """
-            CREATE TABLE $TABLE_NAME (
-                $COLUMN_ID TEXT PRIMARY KEY,
-                $COLUMN_TEXT TEXT NOT NULL,
-                $COLUMN_IS_CHECKED INTEGER DEFAULT 0
-            )
-        """
-        db?.execSQL(createTableQuery)
-    }
-
-    override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
-        if (oldVersion < 2) {
-            db?.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COLUMN_IS_CHECKED INTEGER DEFAULT 0")
+    // 페이징된 할 일 목록 가져오기
+    fun getPagedToDoItems(offset: Int, limit: Int): List<ToDoItem> {
+        val cursor = db.rawQuery("SELECT * FROM todo_items LIMIT ? OFFSET ?", arrayOf(limit.toString(), offset.toString()))
+        val todoItems = mutableListOf<ToDoItem>()
+        while (cursor.moveToNext()) {
+            val id = cursor.getString(cursor.getColumnIndex("id"))
+            val text = cursor.getString(cursor.getColumnIndex("text"))
+            val isChecked = cursor.getInt(cursor.getColumnIndex("is_checked")) == 1
+            todoItems.add(ToDoItem(id, text, isChecked))
         }
+        cursor.close()
+        return todoItems
     }
 
-    fun insertOrUpdateText(id: String, text: String, isChecked: Boolean) {
-        val db = writableDatabase
+    // 할 일 항목 저장 또는 업데이트
+    fun insertOrUpdateToDoItem(todoItem: ToDoItem) {
         val values = ContentValues().apply {
-            put(COLUMN_ID, id)
-            put(COLUMN_TEXT, text)
-            put(COLUMN_IS_CHECKED, if (isChecked) 1 else 0)
+            put("id", todoItem.id)
+            put("text", todoItem.text)
+            put("is_checked", if (todoItem.isChecked) 1 else 0)
         }
-        db.insertWithOnConflict(TABLE_NAME, null, values, SQLiteDatabase.CONFLICT_REPLACE)
-        db.close()
+        db.insertWithOnConflict("todo_items", null, values, SQLiteDatabase.CONFLICT_REPLACE)
     }
 
-    fun getAllTexts(): List<Triple<String, String, Boolean>> {
-        val texts = mutableListOf<Triple<String, String, Boolean>>()
-        val db = readableDatabase
-
-        // ID 순서로 정렬
-        val cursor = db.rawQuery("SELECT * FROM $TABLE_NAME ORDER BY $COLUMN_ID ASC", null)
-
-        if (cursor.moveToFirst()) {
-            do {
-                val id = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ID))
-                val text = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TEXT))
-                val isChecked = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_IS_CHECKED)) == 1
-                texts.add(Triple(id, text, isChecked))
-            } while (cursor.moveToNext())
-        }
-        cursor.close()
-        db.close()
-        return texts
+    // 할 일 항목 삭제
+    fun deleteToDoItemById(id: String) {
+        db.delete("todo_items", "id = ?", arrayOf(id))
     }
 
-    fun getPagedTexts(offset: Int, limit: Int): List<Triple<String, String, Boolean>> {
-        val texts = mutableListOf<Triple<String, String, Boolean>>()
-        val db = readableDatabase
-
-        // 페이징 및 정렬 추가
-        val query = "SELECT * FROM $TABLE_NAME ORDER BY $COLUMN_ID ASC LIMIT ? OFFSET ?"
-        val cursor = db.rawQuery(query, arrayOf(limit.toString(), offset.toString()))
-
-        if (cursor.moveToFirst()) {
-            do {
-                val id = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ID))
-                val text = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TEXT))
-                val isChecked = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_IS_CHECKED)) == 1
-                texts.add(Triple(id, text, isChecked))
-            } while (cursor.moveToNext())
-        }
-        cursor.close()
-        db.close()
-        return texts
+    // 고유 ID 생성 (시간 기반)
+    fun generateUniqueId(): String {
+        return System.currentTimeMillis().toString() // 시간 기반으로 고유 ID 생성
     }
-
-    fun deleteTextById(id: String) {
-        val db = writableDatabase
-        db.delete(TABLE_NAME, "$COLUMN_ID = ?", arrayOf(id))
-        db.close()
-    }
-    fun generateUniqueId(position: Int): String {
-        val dateFormat = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
-        val date = dateFormat.format(Date()) // 현재 날짜를 yyyyMMdd 형식으로 포맷
-        return "$date-$position" // 날짜와 리스트의 인덱스를 조합
-    }
-
 }

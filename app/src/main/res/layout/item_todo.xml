@@ -1,39 +1,33 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="16dp"
-    android:clickable="true"
-    android:focusable="true">
+    android:padding="16dp">
 
     <!-- 체크박스 -->
     <CheckBox
         android:id="@+id/todoCheckBox"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"/>
 
-    <!-- 할 일 텍스트 표시용 TextView -->
+    <!-- 할 일 텍스트 (수정 전 표시용) -->
     <TextView
         android:id="@+id/todoTextView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:text="할 일을 입력하세요"
-        android:textSize="16sp"
-        android:paddingStart="16dp" />
+        android:text="Sample Todo"
+        android:textSize="16sp" />
 
-    <!-- 할 일 수정용 EditText (초기에는 숨김) -->
+    <!-- 할 일 수정용 EditText (편집 모드에서 표시) -->
     <EditText
         android:id="@+id/todoEditText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:hint="수정하세요"
-        android:textSize="16sp"
         android:visibility="gone"
-        android:inputType="textNoSuggestions|textMultiLine"
-        android:maxLines="1"
-        android:paddingStart="16dp"/>
+    android:imeOptions="actionDone"
+    android:inputType="text"
+    android:textSize="16sp"/>
 </LinearLayout>

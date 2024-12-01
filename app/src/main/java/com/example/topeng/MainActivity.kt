@@ -36,11 +36,6 @@ class MainActivity : AppCompatActivity() {
                 .replace(R.id.todoFragmentContainer, ToDoFragment())
                 .commit()
         }
-        // 버튼 클릭 이벤트 처리
-        val addTodoButton: Button = findViewById(R.id.addTodoButton)
-        addTodoButton.setOnClickListener {
-            ToDoFragment().addNewTodo();
-        }
 
         // 위치 권한 확인 및 요청
         if (ActivityCompat.checkSelfPermission(
