@@ -8,6 +8,7 @@ import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 
 class ToDoAdapter(
@@ -26,12 +27,19 @@ class ToDoAdapter(
         holder.bind(todoItem)
 
         // 체크박스 상태 변경 시
+        // ToDoAdapter에서 체크박스 클릭 시
         holder.todoCheckBox.setOnCheckedChangeListener { _, isChecked ->
             todoItem.isChecked = isChecked
             // 데이터베이스에서 체크 상태 업데이트
             val dbHelper = MyDatabaseHelper(holder.itemView.context)
             dbHelper.insertOrUpdateToDoItem(todoItem)
+
+            // 체크된 경우 "고생했어 펭" 출력
+            if (isChecked) {
+                Toast.makeText(holder.itemView.context, "고생했어 펭!", Toast.LENGTH_SHORT).show()
+            }
         }
+
 
         // 짧은 클릭: 수정 모드로 진입
         holder.itemView.setOnClickListener {

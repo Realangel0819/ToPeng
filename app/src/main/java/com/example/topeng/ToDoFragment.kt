@@ -18,7 +18,6 @@ import androidx.recyclerview.widget.RecyclerView
 
 
 
-
 class ToDoFragment : Fragment() {
 
     private lateinit var todoRecyclerView: RecyclerView
@@ -68,6 +67,12 @@ class ToDoFragment : Fragment() {
         // 할 일 추가 버튼 클릭 이벤트
         addTodoButton.setOnClickListener {
             addNewTodo()
+        }
+
+        // 할 일 추가 버튼을 길게 눌렀을 때, 전체 삭제
+        addTodoButton.setOnLongClickListener {
+            showDeleteAllConfirmationDialog()
+            true
         }
     }
 
@@ -216,4 +221,21 @@ class ToDoFragment : Fragment() {
         }
     }
 
+    // 전체 삭제 확인 다이얼로그
+    private fun showDeleteAllConfirmationDialog() {
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setMessage("모든 할 일을 삭제하시겠습니까?")
+            .setPositiveButton("삭제") { _, _ ->
+                // 모든 할 일 삭제
+                todoList.clear()
+                adapter.notifyDataSetChanged()
+
+                // 데이터베이스에서 모든 할 일 삭제
+                dbHelper.deleteAllToDoItems()
+
+                Toast.makeText(requireContext(), "모든 할 일이 삭제되었습니다.", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("취소", null)
+        builder.create().show()
+    }
 }
