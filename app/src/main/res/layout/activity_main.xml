@@ -13,21 +13,24 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- To-Do Fragment Container with Scroll -->
-    <ScrollView
-        android:id="@+id/todoFragmentScrollView"
+    <!-- To-Do Fragment Container -->
+    <FrameLayout
+        android:id="@+id/todoFragmentContainer"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintTop_toBottomOf="@id/weatherFragmentContainer"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintBottom_toTopOf="@id/addTodoButton" />
 
-        <FrameLayout
-            android:id="@+id/todoFragmentContainer"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-    </ScrollView>
-
+    <!-- 추가 버튼: 하단에 고정 -->
+    <Button
+        android:id="@+id/addTodoButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="할 일 추가하기"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_margin="16dp" />
 </androidx.constraintlayout.widget.ConstraintLayout>

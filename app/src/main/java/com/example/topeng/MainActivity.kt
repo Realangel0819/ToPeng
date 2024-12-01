@@ -3,6 +3,7 @@ package com.example.topeng
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -25,7 +26,6 @@ class MainActivity : AppCompatActivity() {
             apiAvailability.getErrorDialog(this, resultCode, 1001)?.show()
             return // Google Play Services가 없으면 더 진행하지 않음
         }
-
     // Fragment 추가
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
@@ -35,6 +35,11 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager.beginTransaction()
                 .replace(R.id.todoFragmentContainer, ToDoFragment())
                 .commit()
+        }
+        // 버튼 클릭 이벤트 처리
+        val addTodoButton: Button = findViewById(R.id.addTodoButton)
+        addTodoButton.setOnClickListener {
+            ToDoFragment().addNewTodo();
         }
 
         // 위치 권한 확인 및 요청
