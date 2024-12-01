@@ -15,3 +15,8 @@ Why Use This App?
 Stay prepared for the weather no matter where you are.
 Organize your tasks and boost productivity with a simple and intuitive interface.
 Whether you're planning your day or checking the weather, this app has you covered!
+
+
+껏다켰을때 스크롤 사라짐
+입력창이 키보드보다 아래있는 문제
+toast 느리게 뜨는문제
