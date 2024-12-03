@@ -18,33 +18,43 @@
             android:layout_height="?attr/actionBarSize"
             android:background="@color/light_blue"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            android:gravity="center"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <!-- 로그아웃 버튼 -->
-        <Button
-            android:id="@+id/buttonLogout"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="로그아웃" />
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <Button
+                android:id="@+id/buttonLogout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="로그아웃" />
+
+            <Button
+                android:id="@+id/buttonChangePassword"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="비밀번호 변경" />
+
+            <Button
+                android:id="@+id/buttonDeleteAccount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="#7FFFEB3B"
+                android:text="계정 삭제" />
+        </LinearLayout>
 
         <!-- 비밀번호 변경 버튼 -->
-        <Button
-            android:id="@+id/buttonChangePassword"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="비밀번호 변경" />
 
         <!-- 계정 삭제 버튼 -->
-        <Button
-            android:id="@+id/buttonDeleteAccount"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="#7FFFEB3B"
-            android:text="계정 삭제" />
     </LinearLayout>
 
     <!-- 네비게이션 드로어 -->
