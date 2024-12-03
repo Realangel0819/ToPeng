@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView
 
 class ToDoFragment : Fragment() {
 
+
     private lateinit var todoRecyclerView: RecyclerView
     private lateinit var addTodoButton: Button
     private lateinit var adapter: ToDoAdapter
@@ -91,7 +92,6 @@ class ToDoFragment : Fragment() {
 
         isLoading = false
     }
-
     private fun addNewTodo() {
         if (isProcessingChanges) return
         isProcessingChanges = true
@@ -100,12 +100,12 @@ class ToDoFragment : Fragment() {
         val uniqueId = dbHelper.generateUniqueId()
 
         val newToDoItem = ToDoItem(uniqueId, newTodo, false)
-        todoList.add(newToDoItem)
-        dbHelper.insertOrUpdateToDoItem(newToDoItem)
 
-        val position = todoList.indexOfFirst { it.id == uniqueId }
-        adapter.notifyItemInserted(position)
-        todoRecyclerView.scrollToPosition(position)
+        // 항목을 리스트의 맨 끝에 추가
+        todoList.add(newToDoItem)
+
+        // 어댑터에 새 항목이 마지막에 추가되었음을 알리기
+        adapter.notifyItemInserted(todoList.size - 1)
 
         todoRecyclerView.post {
             enableEditMode(uniqueId)
@@ -121,19 +121,23 @@ class ToDoFragment : Fragment() {
         val currentTodoItem = todoList[position]
 
         holder?.let {
+            // 키보드 숨기기
             hideKeyboard(it.itemView)
 
+            // 기존 텍스트 보이기 / 편집 가능하게 만들기
             it.todoTextView.visibility = View.GONE
             it.todoEditText.visibility = View.VISIBLE
             it.todoEditText.setText(currentTodoItem.text)
             it.todoEditText.isSingleLine = true
             it.todoEditText.imeOptions = EditorInfo.IME_ACTION_DONE
             it.todoEditText.inputType = InputType.TYPE_CLASS_TEXT
-            it.todoEditText.requestFocus()
+            it.todoEditText.requestFocus() // 포커스 주기
 
+            // 키보드 자동 나타나게 하기
             val imm = activity?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             imm.showSoftInput(it.todoEditText, InputMethodManager.SHOW_IMPLICIT)
 
+            // 편집 완료 시 처리
             it.todoEditText.setOnEditorActionListener { _, actionId, _ ->
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
                     saveOrRemoveText(
@@ -149,6 +153,7 @@ class ToDoFragment : Fragment() {
                 }
             }
 
+            // 포커스가 바뀌면 저장/제거 처리
             it.todoEditText.setOnFocusChangeListener { _, hasFocus ->
                 if (!hasFocus) {
                     saveOrRemoveText(
@@ -162,6 +167,7 @@ class ToDoFragment : Fragment() {
             }
         }
     }
+
 
     private fun exitEditMode(holder: ToDoAdapter.ToDoViewHolder, position: Int) {
         holder.todoEditText.visibility = View.GONE
@@ -178,12 +184,15 @@ class ToDoFragment : Fragment() {
             todoList[position] = ToDoItem(id, updatedText, isChecked)
             adapter.notifyItemChanged(position)
             dbHelper.insertOrUpdateToDoItem(todoList[position])
-            Toast.makeText(requireContext(), "할 일이 등록되었습니다.", Toast.LENGTH_SHORT).show()
+            showCustomToast("할 일이 등록되었습니다.")
         } else {
-            todoList.removeAt(position)
-            adapter.notifyItemRemoved(position)
-            dbHelper.deleteToDoItemById(id)
-            Toast.makeText(requireContext(), "빈칸입니다.", Toast.LENGTH_SHORT).show()
+            // 빈칸일 때 position 유효성 체크
+            if (position >= 0 && position < todoList.size) {
+                todoList.removeAt(position)
+                adapter.notifyItemRemoved(position)
+                dbHelper.deleteToDoItemById(id)
+                showCustomToast("빈칸입니다.")
+            }
         }
     }
 
@@ -213,9 +222,7 @@ class ToDoFragment : Fragment() {
 
                     // 데이터베이스에서 삭제
                     dbHelper.deleteToDoItemById(id)
-
-                    Toast.makeText(requireContext(), "할 일이 삭제되었습니다.", Toast.LENGTH_SHORT).show()
-                }
+                    showCustomToast("할 일이 삭제되었습니다.") }
                 .setNegativeButton("취소", null)
             builder.create().show()
         }
@@ -233,9 +240,19 @@ class ToDoFragment : Fragment() {
                 // 데이터베이스에서 모든 할 일 삭제
                 dbHelper.deleteAllToDoItems()
 
-                Toast.makeText(requireContext(), "모든 할 일이 삭제되었습니다.", Toast.LENGTH_SHORT).show()
-            }
+                showCustomToast("모든 할일이 삭제되었습니다.")            }
             .setNegativeButton("취소", null)
         builder.create().show()
+    }
+    // Toast를 짧게 표시하기 위한 커스터마이징
+    fun showCustomToast(message: String) {
+        val toast = Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT)
+        toast.show()
+
+        // Toast 표시 시간 조정 (1초)
+        val handler = android.os.Handler()
+        handler.postDelayed({
+            toast.cancel() // 1초 후에 Toast를 강제로 종료
+        }, 1000) // 1000ms = 1초
     }
 }

@@ -3,4 +3,6 @@
     <color name="purple_700">#3700B3</color>
     <color name="teal_200">#03DAC5</color>
     <color name="white">#FFFFFF</color>
+    <color name="light_blue">#ADD8E6</color>
+    <color name="yellow">#FFFF00</color>
 </resources>
