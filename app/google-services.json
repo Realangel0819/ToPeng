@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1074794370943",
+    "project_id": "topeng-9af2b",
+    "storage_bucket": "topeng-9af2b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1074794370943:android:2aa37afc24f49a527f2c4a",
+        "android_client_info": {
+          "package_name": "com.example.topeng"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCneSIRt8Px2QzvHf5KMbM-zJdh4Rn2Zbs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

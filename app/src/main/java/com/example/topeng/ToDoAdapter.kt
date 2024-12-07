@@ -30,15 +30,17 @@ class ToDoAdapter(
         // ToDoAdapter에서 체크박스 클릭 시
         holder.todoCheckBox.setOnCheckedChangeListener { _, isChecked ->
             todoItem.isChecked = isChecked
-            // 데이터베이스에서 체크 상태 업데이트
             val dbHelper = MyDatabaseHelper(holder.itemView.context)
+
+            // ToDoItem을 DB에 저장
             dbHelper.insertOrUpdateToDoItem(todoItem)
 
-            // 체크된 경우 "고생했어 펭" 출력
+            // 체크 상태 변경 후 메시지 표시
             if (isChecked) {
                 Toast.makeText(holder.itemView.context, "고생했어 펭!", Toast.LENGTH_SHORT).show()
             }
         }
+
 
 
         // 짧은 클릭: 수정 모드로 진입

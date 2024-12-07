@@ -3,6 +3,7 @@ import java.util.Properties // 추가
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("com.google.gms.google-services") // Firebase google-services 플러그인
 }
 
 android {
@@ -77,6 +78,12 @@ fun getLocalProperty(key: String): String? {
 
 dependencies {
 
+    // Firebase 의존성
+    implementation("com.google.firebase:firebase-auth:21.0.1") // Firebase Authentication
+    implementation("com.google.firebase:firebase-firestore:24.0.3") // Firestore 예시
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0")) // Firebase BOM
+    implementation("com.google.firebase:firebase-analytics") // Firebase Analytics
+
     // Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
@@ -93,7 +100,7 @@ dependencies {
     // Location Services
     implementation("com.google.android.gms:play-services-location:21.0.1")
 
-    //for weather icon load
+    // for weather icon load
     implementation("com.github.bumptech.glide:glide:4.15.1")
     annotationProcessor("com.github.bumptech.glide:compiler:4.15.1")
 

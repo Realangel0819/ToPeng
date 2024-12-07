@@ -6,11 +6,18 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.auth.FirebaseAuth
 
 class LoginActivity : AppCompatActivity() {
+
+    private lateinit var auth: FirebaseAuth
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
+
+        // FirebaseAuth 초기화
+        auth = FirebaseAuth.getInstance()
 
         val emailInput = findViewById<EditText>(R.id.editTextEmail)
         val passwordInput = findViewById<EditText>(R.id.editTextPassword)
@@ -22,16 +29,7 @@ class LoginActivity : AppCompatActivity() {
             val password = passwordInput.text.toString()
 
             if (email.isNotEmpty() && password.isNotEmpty()) {
-                // 이메일을 SharedPreferences에 저장
-                val sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE)
-                val editor = sharedPreferences.edit()
-                editor.putString("USER_EMAIL", email) // 입력받은 이메일 저장
-                editor.apply()
-                Toast.makeText(this, "로그인 성공!", Toast.LENGTH_SHORT).show()
-                // MainActivity로 이동하는 Intent 추가
-                val intent = Intent(this, MainActivity::class.java)
-                startActivity(intent)
-                finish() // LoginActivity 종료 (뒤로가기 시 다시 돌아오지 않도록)
+                loginUser(email, password)
             } else {
                 Toast.makeText(this, "이메일과 비밀번호를 입력하세요.", Toast.LENGTH_SHORT).show()
             }
@@ -40,5 +38,22 @@ class LoginActivity : AppCompatActivity() {
         registerButton.setOnClickListener {
             startActivity(Intent(this, RegisterActivity::class.java))
         }
+    }
+
+    // Firebase Authentication을 이용한 로그인 처리
+    private fun loginUser(email: String, password: String) {
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    val user = auth.currentUser
+                    Toast.makeText(this, "로그인 성공!", Toast.LENGTH_SHORT).show()
+                    // MainActivity로 이동
+                    val intent = Intent(this, MainActivity::class.java)
+                    startActivity(intent)
+                    finish()  // LoginActivity 종료
+                } else {
+                    Toast.makeText(this, "로그인 실패: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
     }
 }
