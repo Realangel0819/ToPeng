@@ -1,17 +1,75 @@
----
 
 ## ToPeng 🐧
+![home](pic/no1.png)
 
-![main](pic/main.png)
-
-### 프로젝트 소개
+## 프로젝트 소개
 - 앱은 사용자가 로그인 후 **위치 기반 날씨 정보**와 **투두 리스트**를 함께 관리할 수 있는 앱입니다.
 - 날씨 **API**를 통해 **실시간 날씨**를 제공하고, 투두 리스트를 통해 할 일을 쉽게 **추가하고 관리**할 수 있습니다.
 - **위치 추적**을 통해 사용자의 정확한 날씨 정보를 제공합니다.
 
----
+## 1. 개발 환경
+- **프론트엔드**: Kotlin, Android Studio, XML
+- **백엔드**: OpenWeatherMap API (날씨 정보 제공), SQLite (투두 저장)
 
-### **기능 설명**
+## 2. 프로젝트 구조
+
+여기에 추가된 내용으로 프로젝트 정리본을 다시 작성해드릴게요! 개선 사항을 제외하고 나머지 부분을 반영한 내용입니다. 펭! 🐧
+
+```text
+main
+│
+├── java/com/example/topeng
+│   ├── ui/theme
+│   ├── ChangePasswordActivity.kt
+│   ├── LoginActivity.kt
+│   ├── MainActivity.kt
+│   ├── MyPageActivity.kt
+│   ├── RegisterActivity.kt
+│   ├── ToDoAdapter.kt
+│   ├── ToDoFragment.kt
+│   ├── ToDoItem.kt
+│   ├── WeatherApiService.kt
+│   ├── WeatherFragment.kt
+│   └── WeatherResponse.kt
+│
+└── res
+    ├── layout
+    │   ├── activity_change_password.xml
+    │   ├── activity_login.xml
+    │   ├── activity_main.xml
+    │   ├── activity_mypage.xml
+    │   ├── activity_register.xml
+    │   ├── fragment_todo.xml
+    │   ├── fragment_weather.xml
+    │   ├── item_todo.xml
+    │   └── nav_header.xml
+    │
+    ├── menu
+    │   └── drawer_menu.xml
+    │
+    ├── mipmap
+    │   ├── sunglass.webp
+    │   └── sunglasscircle.webp
+    │
+    ├── values
+    │   ├── colors.xml
+    │   ├── strings.xml
+    │   └── themes.xml
+    │
+    └── drawable
+│
+test
+│
+└── java/com/example/topeng
+    └── ExampleUnitTest.kt
+
+.gitignore
+build.gradle.kts
+proguard-rules.pro
+```
+
+
+## 3. 기능소개
 
 #### **1. 회원가입 화면**
 - **이메일**, **비밀번호**, **비밀번호 확인**을 입력받아 사용자가 직접 회원가입을 진행할 수 있습니다.
@@ -21,6 +79,7 @@
 #### **2. 로그인 화면**
 - **이메일**과 **비밀번호**로 사용자가 로그인을 할 수 있습니다.
 - 로그인 성공 시 메인 화면으로 전환되고, **회원가입** 버튼을 통해 회원가입 화면으로 이동할 수 있습니다.
+- 자동 로그인 기능을 추가하여 앱을 열 때, 사용자가 이전에 로그인한 상태라면 로그인 없이 바로 MainActivity로 이동합니다.
 - ![로그인 화면](pic/login.png)
 
 #### **3. 메인 화면**
@@ -50,7 +109,7 @@
 
 ---
 
-### **Firebase Database 구조**
+#### **7. Firebase Database 구조**
 
 아래와 같은 방식으로 Firebase Firestore에 데이터가 저장됩니다.
 
@@ -62,7 +121,7 @@
 
 ---
 
-### **Firebase Authentication**
+#### **8.Firebase Authentication**
 
 로그인된 사용자에 대한 정보를 **Firebase Authentication**을 사용하여 관리합니다. 각 사용자의 인증 정보는 아래에서 확인할 수 있습니다.
 
@@ -73,7 +132,7 @@
 
 ---
 
-### **개선 목표**
+### **4. 개선 목표**
 
 #### **1. 회원가입 데이터 관리 개선**
 - **데이터 저장 방식** 개선: 회원가입 시 **Firebase Authentication**을 통해 안전하게 데이터를 저장하고 관리할 예정입니다.
@@ -86,7 +145,7 @@
 
 ---
 
-### **기술적 도전 과제**
+### **5. 기술적 도전 과제**
 
 #### **1. 사용자 경험 향상**
 - 투두 앱에서 **사용자 경험**을 개선하는 것이 중요한 목표였습니다. 할 일을 추가하고 삭제하는 과정에서 **UI**가 직관적이지 않거나 반응 속도가 느리면 사용자 경험이 저하될 수 있었습니다.
