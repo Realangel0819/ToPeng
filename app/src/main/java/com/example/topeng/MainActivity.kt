@@ -14,6 +14,7 @@ import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.location.LocationServices
 import com.google.android.material.navigation.NavigationView
+import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : AppCompatActivity() {
 
@@ -34,9 +35,14 @@ class MainActivity : AppCompatActivity() {
 
         val userEmailTextView = headerView.findViewById<TextView>(R.id.textViewEmail)
 
-        // SharedPreferences에서 이메일 가져오기
-        val sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE)
-        val userEmail = sharedPreferences.getString("USER_EMAIL", "guest@example.com") // 기본값을 guest@example.com으로 설정
+        // FirebaseAuth 인스턴스 초기화
+        val auth = FirebaseAuth.getInstance()
+
+        // Firebase에서 현재 로그인한 사용자 가져오기
+        val user = auth.currentUser
+
+        // 이메일이 존재하면 이메일을 텍스트뷰에 설정, 없으면 기본값 설정
+        val userEmail = user?.email ?: "guest@example.com" // 현재 로그인된 사용자가 없다면 기본값 사용
 
         // 이메일 텍스트 설정
         userEmailTextView.text = userEmail

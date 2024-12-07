@@ -33,11 +33,17 @@ class MyPageActivity : AppCompatActivity() {
 
         val headerView = navigationView.getHeaderView(0) // 헤더 레이아웃 참조
         val userEmailTextView = headerView.findViewById<TextView>(R.id.textViewEmail)
+        // FirebaseAuth 인스턴스 초기화
+        val auth = FirebaseAuth.getInstance()
 
-        // SharedPreferences에서 이메일 가져오기
-        val sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE)
-        val userEmail = sharedPreferences.getString("USER_EMAIL", "guest@example.com") // 기본값을 guest@example.com으로 설정
+        // Firebase에서 현재 로그인한 사용자 가져오기
+        val user = auth.currentUser
 
+        // 이메일이 존재하면 이메일을 텍스트뷰에 설정, 없으면 기본값 설정
+        val userEmail = user?.email ?: "guest@example.com" // 현재 로그인된 사용자가 없다면 기본값 사용
+
+        // 이메일 텍스트 설정
+        userEmailTextView.text = userEmail
         // 이메일 텍스트 설정
         userEmailTextView.text = userEmail
 
@@ -106,7 +112,6 @@ class MyPageActivity : AppCompatActivity() {
     }
 
 
-    // 계정 삭제 처리
     // 계정 삭제 처리
     private fun handleAccountDeletion() {
         val user = FirebaseAuth.getInstance().currentUser
