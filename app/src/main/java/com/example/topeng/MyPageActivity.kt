@@ -10,12 +10,15 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class MyPageActivity : AppCompatActivity() {
 
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var navigationView: NavigationView
     private lateinit var auth: FirebaseAuth
+    private val db = FirebaseFirestore.getInstance()  // Firestore 인스턴스
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,6 +94,10 @@ class MyPageActivity : AppCompatActivity() {
 
     // 로그아웃 처리
     private fun handleLogout() {
+        // Firebase에서 로그아웃 처리
+        FirebaseAuth.getInstance().signOut()
+
+        // 로그아웃 후, LoginActivity로 이동
         val intent = Intent(this, LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
@@ -98,22 +105,50 @@ class MyPageActivity : AppCompatActivity() {
         finish()
     }
 
+
+    // 계정 삭제 처리
     // 계정 삭제 처리
     private fun handleAccountDeletion() {
         val user = FirebaseAuth.getInstance().currentUser
-        user?.delete()
-            ?.addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    Toast.makeText(this, "계정이 삭제되었습니다.", Toast.LENGTH_SHORT).show()
-                    val intent = Intent(this, LoginActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    startActivity(intent)
-                    finish()
-                } else {
-                    Toast.makeText(this, "계정 삭제 실패: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+        val userId = user?.uid
+
+        if (userId != null) {
+            // Firestore에서 해당 사용자의 모든 todo 항목 삭제
+            db.collection("users")
+                .document(userId)
+                .collection("todos")
+                .get()
+                .addOnSuccessListener { documents ->
+                    for (document in documents) {
+                        db.collection("users")
+                            .document(userId)
+                            .collection("todos")
+                            .document(document.id)
+                            .delete()
+                    }
+
+                    // todo 항목 삭제 후 계정 삭제
+                    user.delete()
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                Toast.makeText(this, "계정과 모든 할 일이 삭제되었습니다.", Toast.LENGTH_SHORT).show()
+                                val intent = Intent(this, LoginActivity::class.java)
+                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                startActivity(intent)
+                                finish()
+                            } else {
+                                Toast.makeText(this, "계정 삭제 실패: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                            }
+                        }
                 }
-            }
+                .addOnFailureListener { exception ->
+                    Toast.makeText(this, "할 일 삭제 실패: ${exception.message}", Toast.LENGTH_SHORT).show()
+                }
+        } else {
+            Toast.makeText(this, "로그인된 사용자가 없습니다.", Toast.LENGTH_SHORT).show()
+        }
     }
+
 
     // 비밀번호 변경 화면으로 이동
     private fun navigateToChangePassword() {

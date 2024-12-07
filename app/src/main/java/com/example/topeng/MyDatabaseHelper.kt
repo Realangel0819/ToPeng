@@ -1,65 +1,119 @@
-import android.content.ContentValues
+package com.example.topeng
+
 import android.content.Context
-import android.database.sqlite.SQLiteDatabase
-import com.example.topeng.ToDoItem
-class MyDatabaseHelper(context: Context) {
+import android.widget.Toast
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
-    private val db: SQLiteDatabase = context.openOrCreateDatabase("todo_db", Context.MODE_PRIVATE, null)
+class MyDatabaseHelper(private val context: Context) {  // context를 생성자에서 전달받음
 
-    // 테이블이 없다면 생성하는 메서드
-    private fun createTableIfNotExists() {
-        val createTableQuery = """
-            CREATE TABLE IF NOT EXISTS todo_items (
-                id TEXT PRIMARY KEY,
-                text TEXT DEFAULT '',
-                is_checked INTEGER DEFAULT 0
-            )
-        """
-        db.execSQL(createTableQuery)
-    }
+    private val db = FirebaseFirestore.getInstance()
+    private val auth = FirebaseAuth.getInstance()
 
-    init {
-        createTableIfNotExists()
-    }
-
-    // 페이징된 할 일 목록 가져오기 (null 처리 추가)
-    fun getPagedToDoItems(offset: Int, limit: Int): List<ToDoItem> {
-        val cursor = db.rawQuery(
-            "SELECT * FROM todo_items ORDER BY id ASC LIMIT ? OFFSET ?",
-            arrayOf(limit.toString(), offset.toString())
-        )
+    // Firestore에서 할 일 목록을 가져오는 메서드
+    suspend fun getPagedToDoItems(offset: Int, limit: Int): List<ToDoItem> {
         val todoItems = mutableListOf<ToDoItem>()
-        while (cursor.moveToNext()) {
-            val id = cursor.getString(cursor.getColumnIndex("id")) ?: ""  // null이면 빈 문자열로 처리
-            val text = cursor.getString(cursor.getColumnIndex("text")) ?: ""  // null이면 빈 문자열로 처리
-            val isChecked = cursor.getInt(cursor.getColumnIndex("is_checked")) == 1
-            todoItems.add(ToDoItem(id, text, isChecked))
+
+        // 현재 로그인된 사용자의 ID를 가져옵니다.
+        val userId = auth.currentUser?.uid
+        if (userId == null) {
+            showToast("로그인이 필요합니다.")
+            return todoItems
         }
-        cursor.close()
+
+        // Firestore에서 사용자의 할 일 목록을 가져옵니다.
+        val snapshot = db.collection("users")
+            .document(userId)
+            .collection("todos")
+            .orderBy("id") // id 필드를 기준으로 정렬
+            .limit(limit.toLong())
+            .startAfter(offset.toLong()) // offset 구현
+            .get()
+            .await()
+
+        // 가져온 데이터를 todoItems에 추가
+        for (document in snapshot) {
+            val todoItem = document.toObject(ToDoItem::class.java)
+            todoItems.add(todoItem)
+        }
+
         return todoItems
     }
 
-    // 할 일 항목 저장 또는 업데이트 (null 처리 추가)
-    fun insertOrUpdateToDoItem(todoItem: ToDoItem) {
-        val values = ContentValues().apply {
-            put("id", todoItem.id)
-            put("text", todoItem.text ?: "")  // text가 null이면 빈 문자열로 처리
-            put("is_checked", if (todoItem.isChecked) 1 else 0)
+    // 할 일 항목 저장 또는 업데이트
+    suspend fun insertOrUpdateToDoItem(todoItem: ToDoItem) {
+        val userId = auth.currentUser?.uid
+        if (userId == null) {
+            showToast("로그인이 필요합니다.")
+            return
         }
-        db.insertWithOnConflict("todo_items", null, values, SQLiteDatabase.CONFLICT_REPLACE)
+
+        val todoRef = db.collection("users")
+            .document(userId)
+            .collection("todos")
+            .document(todoItem.id)
+
+        // Firestore에 저장
+        todoRef.set(todoItem)
+            .addOnSuccessListener {
+                showToast("할 일이 저장되었습니다.")
+            }
+            .addOnFailureListener { e ->
+                showToast("할 일 저장 실패: ${e.message}")
+            }
     }
 
     // 할 일 항목 삭제
-    fun deleteToDoItemById(id: String) {
-        db.delete("todo_items", "id = ?", arrayOf(id))
+    suspend fun deleteToDoItemById(id: String) {
+        val userId = auth.currentUser?.uid
+        if (userId == null) {
+            showToast("로그인이 필요합니다.")
+            return
+        }
+
+        val todoRef = db.collection("users")
+            .document(userId)
+            .collection("todos")
+            .document(id)
+
+        todoRef.delete()
+            .addOnSuccessListener {
+                showToast("할 일이 삭제되었습니다.")
+            }
+            .addOnFailureListener { e ->
+                showToast("할 일 삭제 실패: ${e.message}")
+            }
     }
 
     // 고유 ID 생성 (시간 기반)
     fun generateUniqueId(): String {
         return System.currentTimeMillis().toString() // 시간 기반으로 고유 ID 생성
     }
-    fun deleteAllToDoItems() {
-        db.delete("todo_items", null, null)
+
+    // 모든 할 일 삭제
+    suspend fun deleteAllToDoItems() {
+        val userId = auth.currentUser?.uid
+        if (userId == null) {
+            showToast("로그인이 필요합니다.")
+            return
+        }
+
+        val todosRef = db.collection("users")
+            .document(userId)
+            .collection("todos")
+
+        // 모든 할 일 삭제
+        todosRef.get().addOnSuccessListener { documents ->
+            for (document in documents) {
+                todosRef.document(document.id).delete()
+            }
+        }
+        showToast("모든 할 일이 삭제되었습니다.")
     }
 
+    // Toast 메시지 출력
+    private fun showToast(message: String) {
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    }
 }

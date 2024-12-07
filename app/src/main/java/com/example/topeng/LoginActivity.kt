@@ -19,6 +19,11 @@ class LoginActivity : AppCompatActivity() {
         // FirebaseAuth 초기화
         auth = FirebaseAuth.getInstance()
 
+        // 이미 로그인된 상태라면 MainActivity로 바로 이동
+        if (auth.currentUser != null) {
+            navigateToMainActivity()
+        }
+
         val emailInput = findViewById<EditText>(R.id.editTextEmail)
         val passwordInput = findViewById<EditText>(R.id.editTextPassword)
         val loginButton = findViewById<Button>(R.id.buttonLogin)
@@ -48,12 +53,17 @@ class LoginActivity : AppCompatActivity() {
                     val user = auth.currentUser
                     Toast.makeText(this, "로그인 성공!", Toast.LENGTH_SHORT).show()
                     // MainActivity로 이동
-                    val intent = Intent(this, MainActivity::class.java)
-                    startActivity(intent)
-                    finish()  // LoginActivity 종료
+                    navigateToMainActivity()
                 } else {
                     Toast.makeText(this, "로그인 실패: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                 }
             }
+    }
+
+    // MainActivity로 이동하는 메서드
+    private fun navigateToMainActivity() {
+        val intent = Intent(this, MainActivity::class.java)
+        startActivity(intent)
+        finish()  // LoginActivity 종료
     }
 }
