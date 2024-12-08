@@ -9,7 +9,7 @@
 
 ## 1. 개발 환경
 - **프론트엔드**: Kotlin, Android Studio, XML
-- **백엔드**: OpenWeatherMap API (날씨 정보 제공), SQLite (투두 저장)
+- **백엔드**: OpenWeatherMap API (날씨 정보 제공), SQLite (투두 저장), Firebase (사용자 관리 및 투두데이터 관리)
 
 ## 2. 프로젝트 구조
 
