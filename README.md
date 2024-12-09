@@ -13,7 +13,20 @@
 
 ## 2. 프로젝트 구조
 
-여기에 추가된 내용으로 프로젝트 정리본을 다시 작성해드릴게요! 개선 사항을 제외하고 나머지 부분을 반영한 내용입니다. 펭! 🐧
+## 환경
+
+- **Compile SDK Version**: 34 (Android 14)
+- **Min SDK Version**: 26 (Android 8.0 Oreo)
+- **Target SDK Version**: 34 (Android 14)
+- **Version Code**: 1
+- **Version Name**: 1.0
+- **JVM Target**: 1.8
+
+### 지원기기
+-  **Android 8.0 (Oreo)** 이상
+-  **GPS/location services**
+- Firebase-enabled Android devices.
+
 
 ```text
 main
